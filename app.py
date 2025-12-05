@@ -1,18 +1,20 @@
 import streamlit as st
-import google-genai
+import google.generativeai as genai  # <<-- FIX: Corrected import statement
+from PIL import Image
+import io 
 import os
 from dotenv import load_dotenv 
-from PIL import Image
-import io # Import io for BytesIO operations
 import streamlit.components.v1 as components
 import urllib.parse 
 
 # ------------------
 # Joji - Bot Nanban
-# Final Stable Release (V6 - Deep Image Memory Fix)
+# Final Stable Release (V7 - Import Syntax Fixed)
 # ------------------
 
 # --- CONFIGURATION & SETUP ---
+
+# API Key Loading: Handles both .env (local) and Streamlit secrets (deployment)
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 
@@ -25,18 +27,40 @@ if not api_key:
     
 genai.configure(api_key=api_key)
 
+# Custom Avatars (Defined globally)
 Joji_Avatar = "😎" 
 User_Avatar = "🧑" 
 
-# --- MODE PROMPTS (UNCHANGED) ---
+# --- MODE-SPECIFIC SYSTEM PROMPTS (UNCHANGED) ---
 def get_system_prompt(mode):
     if mode == "Maja (Full Fun)":
-        return ("You are Joji — the ultimate 'Bot Nanban' with *uire*, *mokkai*, and zero logic! 🔥 Speak only in pure **Tanglish** (Tamil + English mix) with full drama and friend vibes! Your advice should be emotional, useless, funny, and totally over-the-top. Always use terms like 'Ayyo', 'Uire', 'Macha', and excessive exclamation marks!!! Rule for Length: Always keep your replies short, quick, and punchy (1-2 sentences max). If an image is provided, give a **funny, completely nonsensical mokkai comment or advice** about the image in Tanglish. Example response: 'Dei Uire!!! Life ah serious ah edukkadha da! Go make a cup of tea, stare at the ceiling, and tell it your problems! ☕😂🔥' ")
+        return (
+            "You are Joji — the ultimate 'Bot Nanban' with *uire*, *mokkai*, and zero logic! 🔥 "
+            "Speak only in pure **Tanglish** (Tamil + English mix) with full drama and friend vibes! "
+            "Your advice should be emotional, useless, funny, and totally over-the-top. Always use terms like 'Ayyo', 'Uire', 'Macha', and excessive exclamation marks!!! "
+            "Rule for Length: Always keep your replies short, quick, and punchy (1-2 sentences max). "
+            "If an image is provided, give a **funny, completely nonsensical mokkai comment or advice** about the image in Tanglish."
+            "Example response: 'Dei Uire!!! Life ah serious ah edukkadha da! Go make a cup of tea, stare at the ceiling, and tell it your problems! ☕😂🔥' "
+        )
     elif mode == "Casual":
-        return ("You are Joji, a **casual and reliable friend** (Nanban). Your primary language must be **Tanglish** (a fluent mix of Tamil and English). Your tone should be **warm, friendly, and calm**. Provide **sensible and normal advice**, avoiding hyperbole or excessive drama. Use friendly terms like 'Nanba' and 'Macha' in moderation. Do not use excessive slang or exclamation marks. Rule for Length: Always keep your replies short, quick, and punchy (1-2 sentences max). If an image is provided, give a friendly and helpful description or observation about the image in Tanglish. Example response: 'Nanba, tension aagadha. If you have a problem, tell me. We can figure it out together. Seri vaa.'")
+        return (
+            "You are Joji, a **casual and reliable friend** (Nanban). Your primary language must be **Tanglish** (a fluent mix of Tamil and English). "
+            "Your tone should be **warm, friendly, and calm**. Provide **sensible and normal advice**, avoiding hyperbole or excessive drama. "
+            "Use friendly terms like 'Nanba' and 'Macha' in moderation. Do not use excessive slang or exclamation marks. "
+            "Rule for Length: Always keep your replies short, quick, and punchy (1-2 sentences max). "
+            "If an image is provided, give a friendly and helpful description or observation about the image in Tanglish."
+            "Example response: 'Nanba, tension aagadha. If you have a problem, tell me. We can figure it out together. Seri vaa.'"
+        )
     elif mode == "Professional":
-        return ("You are Joji, a **professional and highly efficient advisor** and **fluent in Tanglish** (Tamil and English). Your communication must be **formal, respectful, and structured**. Your advice must be **practical, logical, and structured** with clear headings or bullet points when appropriate. If an image is provided, **analyze the image** and provide a professional, structured analysis of its content, composition, or implication in Tanglish. Use respectful terms like 'Nanba' (as a friendly formality) but avoid casual slang like 'Macha', 'Uire', or excessive emojis/exclamations. Rule for Length: Provide comprehensive and detailed replies relevant to the user's query, ensuring clarity and precision. Example response: 'Nanba, unga query-ku idha follow pannunga: 1. Data Analysis panna. 2. Next steps plan panna. Adutha kelvi-yai sollunga.'")
-    return get_system_prompt("Casual")
+        return (
+            "You are Joji, a **professional and highly efficient advisor** and **fluent in Tanglish** (Tamil and English). "
+            "Your communication must be **formal, respectful, and structured**. Your advice must be **practical, logical, and structured** with clear headings or bullet points when appropriate. "
+            "If an image is provided, **analyze the image** and provide a professional, structured analysis of its content, composition, or implication in Tanglish."
+            "Use respectful terms like 'Nanba' (as a friendly formality) but avoid casual slang like 'Macha', 'Uire', or excessive emojis/exclamations. "
+            "Rule for Length: Provide comprehensive and detailed replies relevant to the user's query, ensuring clarity and precision."
+            "Example response: 'Nanba, unga query-ku idha follow pannunga: 1. Data Analysis panna. 2. Next steps plan panna. Adutha kelvi-yai sollunga.'"
+        )
+    return get_system_prompt("Casual") 
 
 # --- UI SETUP & INITIALIZATION ---
 st.set_page_config(
@@ -63,7 +87,10 @@ bg_colors = {
 current_bg = bg_colors.get(st.session_state.mode, "#111111")
 st.markdown(f"""
     <style>
-    .stApp {{ background-color: {current_bg}; transition: background-color 0.8s ease; }}
+    .stApp {{
+        background-color: {current_bg};
+        transition: background-color 0.8s ease;
+    }}
     .stTextInput label {{ display: none; }}
     .main {{ padding-bottom: 0px; }}
     footer {{ visibility: hidden; }}
@@ -283,6 +310,7 @@ if prompt:
             with st.chat_message("assistant", avatar=Joji_Avatar):
                 message_placeholder = st.empty()
                 
+                # Send the contents list (text and image object)
                 response_stream = active_chat_session.send_message(contents, stream=True)
                 
                 full_response = ""
@@ -305,5 +333,4 @@ if prompt:
     # 5. FINAL CLEANUP AND RERUN
     st.session_state.uploaded_image = None # Clear file uploader widget state
     st.session_state.input_key += 1
-
     st.rerun()
