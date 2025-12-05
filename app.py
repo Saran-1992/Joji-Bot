@@ -1,15 +1,17 @@
 import streamlit as st
-import google.generativeai as genai  # <<-- FIX: Corrected import statement
-from PIL import Image
-import io 
 import os
 from dotenv import load_dotenv 
+# Third-party libraries
+from PIL import Image
+import io 
 import streamlit.components.v1 as components
 import urllib.parse 
+# The module that was failing:
+import google.generativeai as genai 
 
 # ------------------
 # Joji - Bot Nanban
-# Final Stable Release (V7 - Import Syntax Fixed)
+# Final Stable Release (V8 - Cleaned up Import Order for Deployment)
 # ------------------
 
 # --- CONFIGURATION & SETUP ---
