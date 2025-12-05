@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+import google-genai
 import os
 from dotenv import load_dotenv 
 from PIL import Image
@@ -305,4 +305,5 @@ if prompt:
     # 5. FINAL CLEANUP AND RERUN
     st.session_state.uploaded_image = None # Clear file uploader widget state
     st.session_state.input_key += 1
+
     st.rerun()
