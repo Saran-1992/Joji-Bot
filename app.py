@@ -6,12 +6,14 @@ from PIL import Image
 import io 
 import streamlit.components.v1 as components
 import urllib.parse 
+
+# --- FIX: Place the module import here, after standard libraries, for deployment stability ---
 # The module that was failing:
 import google.generativeai as genai 
 
 # ------------------
 # Joji - Bot Nanban
-# Final Stable Release (V8 - Cleaned up Import Order for Deployment)
+# Ultimate Stable Release (V9 - Deployment Import Fix)
 # ------------------
 
 # --- CONFIGURATION & SETUP ---
